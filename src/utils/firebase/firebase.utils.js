@@ -2,11 +2,14 @@
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
+  updateProfile,
   signInWithRedirect,
   signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
 } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -37,9 +40,8 @@ export const createUserDocumentFromAuth = async (
   if (!userAuth) return;
 
   const userDocRef = doc(db, 'users', userAuth.uid);
-  console.log(userDocRef);
+
   const userSnapshot = await getDoc(userDocRef);
-  console.log(userSnapshot.exists());
 
   if (!userSnapshot.exists()) {
     const { displayName, email } = userAuth;
@@ -52,6 +54,7 @@ export const createUserDocumentFromAuth = async (
         createdAt,
         ...additionalInformation,
       });
+      console.log("Added new instance of user in DB.")
     } catch (error) {
       console.log('Error creating the user', error.message);
     }
@@ -75,3 +78,16 @@ export const signInAuthUserWithEmailAndPassword = async (email, password) => {
 
   return await signInWithEmailAndPassword(auth, email, password);
 };
+
+export const updateUserProfile = async (additionalInformation) => {
+  if (!additionalInformation) {
+    return;
+  }
+
+  return await updateProfile(auth.currentUser, { ...additionalInformation });
+};
+
+export const signUserOut = async () => await signOut(auth);
+
+export const onAuthStateChangedListener = (callback) =>
+  onAuthStateChanged(auth, callback);
